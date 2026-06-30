@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'features/auth/register_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: ParentApp()));
@@ -17,11 +18,7 @@ class ParentApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: Colors.indigo,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Parent App - جاهز للبدء'),
-        ),
-      ),
+      home: const RegisterScreen(),
     );
   }
 }
