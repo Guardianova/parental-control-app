@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Family {
+  id        String   @id @default(uuid())
+  name      String?
+  createdAt DateTime @default(now())
+
+  parents  Parent[]
+  children Child[]
+}
+
+model Parent {
+  id           String   @id @default(uuid())
+  family       Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  familyId     String?
+  email        String   @unique
+  passwordHash String
+  fullName     String?
+  createdAt    DateTime @default(now())
+
+  refreshTokens RefreshToken[]
+
+  @@index([familyId])
+}
+
+model Child {
+  id          String   @id @default(uuid())
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  familyId    String
+  displayName String
+  birthYear   Int?
+  createdAt   DateTime @default(now())
+
+  devices       Device[]
+  pairingTokens PairingToken[]
+
+  @@index([familyId])
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId     String
+  platform    String
+  deviceModel String?
+  publicKey   String
+  isActive    Boolean  @default(true)
+  pairedAt    DateTime @default(now())
+
+  refreshTokens RefreshToken[]
+
+  @@index([childId])
+}
+
+model PairingToken {
+  id        String    @id @default(uuid())
+  child     Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId   String
+  code      String
+  payload   String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([childId])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+
+  parent   Parent? @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+
+  device   Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceId String?
+
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([parentId])
+  @@index([deviceId])
+  @@index([expiresAt])
+}
