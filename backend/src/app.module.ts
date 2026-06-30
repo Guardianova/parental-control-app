@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { FamiliesModule } from './families/families.module';
 import { ChildrenModule } from './children/children.module';
 import { PairingModule } from './pairing/pairing.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PairingModule } from './pairing/pairing.module';
     FamiliesModule,
     ChildrenModule,
     PairingModule,
+    DevicesModule,
   ],
 })
 export class AppModule {}
