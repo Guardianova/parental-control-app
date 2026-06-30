@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_repository.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -91,6 +92,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('تسجيل الدخول'),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+                child: const Text('ليس لديك حساب؟ إنشاء حساب جديد'),
               ),
             ],
           ),
