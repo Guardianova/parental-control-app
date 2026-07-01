@@ -54,6 +54,11 @@
             </intent-filter>
         </activity>
 
+        <!-- PairingActivity — شاشة ربط الجهاز -->
+        <activity
+            android:name=".ui.pairing.PairingActivity"
+            android:exported="false" />
+
         <!-- GuardianService — Foreground Service الرئيسي -->
         <service
             android:name=".service.GuardianService"
