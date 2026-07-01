@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'children_repository.dart';
+import '../pairing/pairing_screen.dart';
 
 class ChildrenScreen extends ConsumerStatefulWidget {
   const ChildrenScreen({super.key});
@@ -145,6 +146,21 @@ class _ChildrenScreenState extends ConsumerState<ChildrenScreen> {
                             subtitle: child['birthYear'] != null
                                 ? Text('سنة الميلاد: ${child['birthYear']}')
                                 : null,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.qr_code),
+                              tooltip: 'ربط جهاز',
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => PairingScreen(
+                                      childId: child['id'] as String,
+                                      childName:
+                                          child['displayName'] as String,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
