@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'family_repository.dart';
+import '../children/children_screen.dart';
 
 class FamilyScreen extends ConsumerStatefulWidget {
   const FamilyScreen({super.key});
@@ -25,8 +26,7 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
 
   Future<void> _loadFamily() async {
     try {
-      final family =
-          await ref.read(familyRepositoryProvider).getMyFamily();
+      final family = await ref.read(familyRepositoryProvider).getMyFamily();
       if (mounted) {
         setState(() {
           _family = family;
@@ -82,7 +82,7 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
         body: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'اسم العائلة: ${_family!['name'] ?? 'بدون اسم'}',
@@ -90,6 +90,18 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
               ),
               const SizedBox(height: 8),
               Text('معرّف العائلة: ${_family!['id']}'),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ChildrenScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.people),
+                label: const Text('إدارة الأبناء'),
+              ),
             ],
           ),
         ),
