@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_repository.dart';
 import 'register_screen.dart';
+import '../family/family_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -33,8 +34,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم تسجيل الدخول بنجاح')),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const FamilyScreen()),
         );
       }
     } catch (e) {
