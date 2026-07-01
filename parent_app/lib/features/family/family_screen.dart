@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'family_repository.dart';
 import '../children/children_screen.dart';
+import '../devices/devices_screen.dart';
 
 class FamilyScreen extends ConsumerStatefulWidget {
   const FamilyScreen({super.key});
@@ -101,6 +102,18 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
                 },
                 icon: const Icon(Icons.people),
                 label: const Text('إدارة الأبناء'),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DevicesScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.devices),
+                label: const Text('الأجهزة المرتبطة'),
               ),
             ],
           ),
