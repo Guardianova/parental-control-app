@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "537122689756",
+    "project_id": "guardianova-9bec1",
+    "storage_bucket": "guardianova-9bec1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537122689756:android:18040356b506bb76721a19",
+        "android_client_info": {
+          "package_name": "com.guardianova.child"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDn_I-cCpfGlVUw06y-R6ELpjZKyOe_Shg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
