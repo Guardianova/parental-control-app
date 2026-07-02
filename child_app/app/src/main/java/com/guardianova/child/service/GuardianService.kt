@@ -17,6 +17,7 @@ import com.guardianova.child.core.network.ApiClient
 import com.guardianova.child.core.network.DeviceStatusApiService
 import com.guardianova.child.core.network.DeviceStatusRequest
 import com.guardianova.child.core.storage.EncryptedStorage
+import com.guardianova.child.monitoring.location.LocationTracker
 import com.guardianova.child.monitoring.usage.UsageStatsCollector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,17 +31,17 @@ class GuardianService : Service() {
     private lateinit var storage: EncryptedStorage
     private lateinit var apiService: DeviceStatusApiService
     private lateinit var usageCollector: UsageStatsCollector
+    private lateinit var locationTracker: LocationTracker
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
 
     companion object {
-        const val CHANNEL_ID = "guardian_channel"
-        const val NOTIFICATION_ID = 1
+        const val CHANNEL_ID         = "guardian_channel"
+        const val NOTIFICATION_ID    = 1
         const val STATUS_INTERVAL_MS = 15 * 60 * 1000L
-        const val USAGE_INTERVAL_MS = 15 * 60 * 1000L
+        const val USAGE_INTERVAL_MS  = 15 * 60 * 1000L
 
         fun start(context: Context) {
-            val intent = Intent(context, GuardianService::class.java)
-            context.startForegroundService(intent)
+            context.startForegroundService(Intent(context, GuardianService::class.java))
         }
 
         fun stop(context: Context) {
@@ -50,9 +51,10 @@ class GuardianService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        storage = EncryptedStorage(this)
-        apiService = ApiClient.build(this).create(DeviceStatusApiService::class.java)
-        usageCollector = UsageStatsCollector(this)
+        storage         = EncryptedStorage(this)
+        apiService      = ApiClient.build(this).create(DeviceStatusApiService::class.java)
+        usageCollector  = UsageStatsCollector(this)
+        locationTracker = LocationTracker(this)
         createNotificationChannel()
     }
 
@@ -60,6 +62,7 @@ class GuardianService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         startStatusReporting()
         startUsageReporting()
+        startLocationTracking()
         return START_STICKY
     }
 
@@ -80,8 +83,8 @@ class GuardianService : Service() {
             description = "خدمة الحماية الأبوية"
             setShowBadge(false)
         }
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
+        getSystemService(NotificationManager::class.java)
+            .createNotificationChannel(channel)
     }
 
     private fun buildNotification(): Notification {
@@ -94,22 +97,22 @@ class GuardianService : Service() {
             .build()
     }
 
-    // ─── إرسال حالة الجهاز دورياً ────────────────────────────
+    // ─── حالة الجهاز ──────────────────────────────────────────
     private fun startStatusReporting() {
         serviceScope.launch {
             while (isActive) {
                 try {
-                    val deviceId = storage.getDeviceId()
-                    if (deviceId != null) {
-                        val status = DeviceStatusRequest(
-                            batteryLevel = getBatteryLevel(),
-                            isCharging = isCharging(),
-                            networkType = getNetworkType(),
-                            deviceModel = getDeviceModel(),
-                            osVersion = Build.VERSION.SDK_INT,
-                            appVersion = BuildConfig.VERSION_NAME
+                    storage.getDeviceId()?.let { deviceId ->
+                        apiService.sendStatus(
+                            deviceId, DeviceStatusRequest(
+                                batteryLevel = getBatteryLevel(),
+                                isCharging   = isCharging(),
+                                networkType  = getNetworkType(),
+                                deviceModel  = getDeviceModel(),
+                                osVersion    = Build.VERSION.SDK_INT,
+                                appVersion   = BuildConfig.VERSION_NAME
+                            )
                         )
-                        apiService.sendStatus(deviceId, status)
                     }
                 } catch (_: Exception) { }
                 delay(STATUS_INTERVAL_MS)
@@ -117,15 +120,21 @@ class GuardianService : Service() {
         }
     }
 
-    // ─── إرسال إحصائيات الاستخدام دورياً ────────────────────
+    // ─── إحصائيات الاستخدام ───────────────────────────────────
     private fun startUsageReporting() {
         serviceScope.launch {
             while (isActive) {
-                try {
-                    usageCollector.collectAndSend()
-                } catch (_: Exception) { }
+                try { usageCollector.collectAndSend() } catch (_: Exception) { }
                 delay(USAGE_INTERVAL_MS)
             }
+        }
+    }
+
+    // ─── الموقع ───────────────────────────────────────────────
+    private fun startLocationTracking() {
+        if (!locationTracker.hasLocationPermission()) return
+        serviceScope.launch {
+            locationTracker.startNormalTracking(serviceScope)
         }
     }
 
@@ -142,16 +151,13 @@ class GuardianService : Service() {
 
     private fun getNetworkType(): String {
         val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return "none"
-        val caps = cm.getNetworkCapabilities(network) ?: return "none"
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork ?: return "none") ?: return "none"
         return when {
-            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)     -> "wifi"
             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "cellular"
             else -> "other"
         }
     }
 
-    private fun getDeviceModel(): String {
-        return "${Build.MANUFACTURER} ${Build.MODEL}"
-    }
+    private fun getDeviceModel() = "${Build.MANUFACTURER} ${Build.MODEL}"
 }
