@@ -17,6 +17,7 @@ import com.guardianova.child.core.network.ApiClient
 import com.guardianova.child.core.network.DeviceStatusApiService
 import com.guardianova.child.core.network.DeviceStatusRequest
 import com.guardianova.child.core.storage.EncryptedStorage
+import com.guardianova.child.monitoring.usage.UsageStatsCollector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,12 +29,14 @@ class GuardianService : Service() {
 
     private lateinit var storage: EncryptedStorage
     private lateinit var apiService: DeviceStatusApiService
+    private lateinit var usageCollector: UsageStatsCollector
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
 
     companion object {
         const val CHANNEL_ID = "guardian_channel"
         const val NOTIFICATION_ID = 1
         const val STATUS_INTERVAL_MS = 15 * 60 * 1000L
+        const val USAGE_INTERVAL_MS = 15 * 60 * 1000L
 
         fun start(context: Context) {
             val intent = Intent(context, GuardianService::class.java)
@@ -49,12 +52,14 @@ class GuardianService : Service() {
         super.onCreate()
         storage = EncryptedStorage(this)
         apiService = ApiClient.build(this).create(DeviceStatusApiService::class.java)
+        usageCollector = UsageStatsCollector(this)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, buildNotification())
         startStatusReporting()
+        startUsageReporting()
         return START_STICKY
     }
 
@@ -106,10 +111,20 @@ class GuardianService : Service() {
                         )
                         apiService.sendStatus(deviceId, status)
                     }
-                } catch (_: Exception) {
-                    // سيعيد المحاولة في الدورة القادمة
-                }
+                } catch (_: Exception) { }
                 delay(STATUS_INTERVAL_MS)
+            }
+        }
+    }
+
+    // ─── إرسال إحصائيات الاستخدام دورياً ────────────────────
+    private fun startUsageReporting() {
+        serviceScope.launch {
+            while (isActive) {
+                try {
+                    usageCollector.collectAndSend()
+                } catch (_: Exception) { }
+                delay(USAGE_INTERVAL_MS)
             }
         }
     }
