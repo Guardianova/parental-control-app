@@ -6,12 +6,13 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.guardianova.child.BuildConfig
 import com.guardianova.child.core.network.ApiClient
 import com.guardianova.child.core.network.DeviceStatusApiService
 import com.guardianova.child.core.network.DeviceStatusRequest
@@ -32,7 +33,7 @@ class GuardianService : Service() {
     companion object {
         const val CHANNEL_ID = "guardian_channel"
         const val NOTIFICATION_ID = 1
-        const val STATUS_INTERVAL_MS = 15 * 60 * 1000L // 15 دقيقة
+        const val STATUS_INTERVAL_MS = 15 * 60 * 1000L
 
         fun start(context: Context) {
             val intent = Intent(context, GuardianService::class.java)
@@ -98,7 +99,10 @@ class GuardianService : Service() {
                         val status = DeviceStatusRequest(
                             batteryLevel = getBatteryLevel(),
                             isCharging = isCharging(),
-                            networkType = getNetworkType()
+                            networkType = getNetworkType(),
+                            deviceModel = getDeviceModel(),
+                            osVersion = Build.VERSION.SDK_INT,
+                            appVersion = BuildConfig.VERSION_NAME
                         )
                         apiService.sendStatus(deviceId, status)
                     }
@@ -130,5 +134,9 @@ class GuardianService : Service() {
             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "cellular"
             else -> "other"
         }
+    }
+
+    private fun getDeviceModel(): String {
+        return "${Build.MANUFACTURER} ${Build.MODEL}"
     }
 }
