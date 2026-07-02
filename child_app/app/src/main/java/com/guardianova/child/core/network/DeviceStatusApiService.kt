@@ -7,7 +7,10 @@ import retrofit2.http.Path
 data class DeviceStatusRequest(
     val batteryLevel: Int,
     val isCharging: Boolean,
-    val networkType: String
+    val networkType: String,
+    val deviceModel: String,
+    val osVersion: Int,
+    val appVersion: String
 )
 
 interface DeviceStatusApiService {
